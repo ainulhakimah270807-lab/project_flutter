@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'models/profile_data.dart';
+import 'pages/edit_profile_page.dart';
+import 'utils/avatar_helper.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -13,7 +17,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  // State untuk Tema Gelap Global
   bool _isDarkMode = false;
 
   void _toggleTheme() {
@@ -65,27 +68,26 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  // Data Profil (Dapat di-edit)
-  String _nama = 'Ainul Hakimah';
-  String _nim = 'E41252793';
-  String _prodi = 'Teknik Informatika';
-  String _universitas = 'Politeknik Negeri Jember';
-  String _tahunMasuk = '2025';
-  String _bio = 'Suka desain UI/UX, Travelling dan minum red velvet.';
+  // Menggunakan model ProfileData agar sinkron penuh dengan form edit
+  ProfileData _profile = const ProfileData(
+    name: 'Ainul Hakimah',
+    email: 'ainulhakimah270807@gmail.com',
+    phone: '081252611176',
+    bio: 'Suka desain UI/UX, Travelling dan minum red velvet.',
+    nim: 'E41252793',
+    prodi: 'Teknik Informatika',
+    universitas: 'Politeknik Negeri Jember',
+    tahunMasuk: '2025',
+    avatarUrl: 'https://picsum.photos/200',
+    skills: ['UI/UX Design', 'Travelling', 'Red Velvet', 'PHP & Web'],
+  );
 
-  // State Fitur Utama
   int _likeCount = 1;
   bool _isLiked = true;
   bool _isSaved = false;
-
-  // State Fitur Subscribe & Share
   bool _isSubscribed = false;
   int _subscriberCount = 120;
 
-  // FITUR BARU: Daftar Hobi/Interest
-  final List<String> _hobbies = ['UI/UX Design', 'Travelling', 'Red Velvet', 'PHP & Web'];
-
-  // Toggle Like & Jumlah Like
   void _toggleLike() {
     setState(() {
       _isLiked = !_isLiked;
@@ -93,7 +95,6 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
-  // Toggle Simpan Profil
   void _toggleSave() {
     setState(() {
       _isSaved = !_isSaved;
@@ -107,7 +108,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // Toggle Subscribe (Berlangganan)
   void _toggleSubscribe() {
     setState(() {
       _isSubscribed = !_isSubscribed;
@@ -118,8 +118,8 @@ class _ProfilePageState extends State<ProfilePage> {
       SnackBar(
         content: Text(
           _isSubscribed 
-            ? 'Berhasil Subscribe ke profil $_nama!' 
-            : 'Unsubscribe dari profil $_nama.',
+            ? 'Berhasil Subscribe ke profil ${_profile.name}!' 
+            : 'Unsubscribe dari profil ${_profile.name}.',
         ),
         duration: const Duration(seconds: 1),
         backgroundColor: _isSubscribed ? Colors.redAccent : Colors.grey[800],
@@ -127,9 +127,8 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // Share Profil (Bagikan Tautan Profil)
   void _shareProfile() {
-    String profileUrl = 'https://profil.digital/user/$_nim';
+    String profileUrl = 'https://profil.digital/user/${_profile.nim}';
     Clipboard.setData(ClipboardData(text: profileUrl));
 
     showDialog(
@@ -173,18 +172,16 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // Salin NIM ke Clipboard
   void _copyNim() {
-    Clipboard.setData(ClipboardData(text: _nim));
+    Clipboard.setData(ClipboardData(text: _profile.nim));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('NIM $_nim berhasil disalin!'),
+        content: Text('NIM ${_profile.nim} berhasil disalin!'),
         duration: const Duration(seconds: 1),
       ),
     );
   }
 
-  // Modal Detail Profil
   void _showDetailModal() {
     showModalBottomSheet(
       context: context,
@@ -201,14 +198,17 @@ class _ProfilePageState extends State<ProfilePage> {
               const Text('Detail Profil', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const Divider(),
               const SizedBox(height: 8),
-              Text('Nama Lengkap: $_nama'),
-              Text('NIM: $_nim'),
-              Text('Program Studi: $_prodi'),
-              Text('Kampus: $_universitas'),
-              Text('Tahun Masuk: $_tahunMasuk'),
+              Text('Nama Lengkap: ${_profile.name}'),
+              Text('NIM: ${_profile.nim}'),
+              Text('Email: ${_profile.email}'),
+              Text('No. HP: ${_profile.phone}'),
+              Text('Program Studi: ${_profile.prodi}'),
+              Text('Kampus: ${_profile.universitas}'),
+              Text('Tahun Masuk: ${_profile.tahunMasuk}'),
+              Text('Keahlian / Hobi: ${_profile.skillsText}'),
               Text('Jumlah Subscriber: $_subscriberCount'),
               const SizedBox(height: 8),
-              Text('Bio: $_bio', style: const TextStyle(fontStyle: FontStyle.italic)),
+              Text('Bio: ${_profile.bio}', style: const TextStyle(fontStyle: FontStyle.italic)),
             ],
           ),
         );
@@ -216,46 +216,20 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // Dialog Edit Profil
-  void _showEditDialog() {
-    TextEditingController nameCtrl = TextEditingController(text: _nama);
-    TextEditingController nimCtrl = TextEditingController(text: _nim);
-    TextEditingController prodiCtrl = TextEditingController(text: _prodi);
+  /// Membuka halaman Edit Profil lengkap dengan form validasi
+  Future<void> _openEditPage() async {
+    final result = await Navigator.push<ProfileData>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditProfilePage(initialData: _profile),
+      ),
+    );
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Edit Profil'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Nama')),
-                TextField(controller: nimCtrl, decoration: const InputDecoration(labelText: 'NIM')),
-                TextField(controller: prodiCtrl, decoration: const InputDecoration(labelText: 'Prodi')),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _nama = nameCtrl.text;
-                  _nim = nimCtrl.text;
-                  _prodi = prodiCtrl.text;
-                });
-                Navigator.pop(context);
-              },
-              child: const Text('Simpan'),
-            ),
-          ],
-        );
-      },
+    if (!mounted || result == null) return;
+
+    setState(() => _profile = result);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Profil berhasil diperbarui ✅')),
     );
   }
 
@@ -270,7 +244,6 @@ class _ProfilePageState extends State<ProfilePage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          // TOMBOL BARU: Toggle Dark/Light Mode di AppBar
           IconButton(
             onPressed: widget.onToggleTheme,
             icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
@@ -290,7 +263,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
+                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
                     blurRadius: 12,
                     offset: const Offset(0, 6),
                   ),
@@ -299,20 +272,20 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Foto Profil
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 45,
-                    backgroundImage: NetworkImage('https://picsum.photos/200'),
+                    backgroundColor: Colors.blue.shade100,
+                    backgroundImage: getAvatarImageProvider(_profile.avatarUrl),
+                    onBackgroundImageError: (exception, stackTrace) {},
                   ),
                   const SizedBox(height: 12),
 
                   Text(
-                    _nama,
+                    _profile.name,
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 2),
 
-                  // Salin NIM Feature
                   InkWell(
                     onTap: _copyNim,
                     borderRadius: BorderRadius.circular(4),
@@ -321,7 +294,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('NIM: $_nim', style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : Colors.grey[700])),
+                          Text('NIM: ${_profile.nim}', style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : Colors.grey[700])),
                           const SizedBox(width: 4),
                           const Icon(Icons.copy, size: 12, color: Colors.blue),
                         ],
@@ -330,29 +303,59 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   const SizedBox(height: 4),
 
-                  Text(_prodi, style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : Colors.grey[600])),
+                  Text(_profile.prodi, style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : Colors.grey[600])),
                   const SizedBox(height: 6),
 
-                  // Data Universitas
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.school, size: 14, color: isDark ? Colors.grey[400] : Colors.grey[600]),
                       const SizedBox(width: 4),
                       Text(
-                        '$_universitas, $_tahunMasuk',
+                        '${_profile.universitas}, ${_profile.tahunMasuk}',
                         style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+
+                  // Display Email & Phone directly on the front card
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 12,
+                    runSpacing: 4,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.email_outlined, size: 12, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                          const SizedBox(width: 4),
+                          Text(
+                            _profile.email,
+                            style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.phone_outlined, size: 12, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                          const SizedBox(width: 4),
+                          Text(
+                            _profile.phone,
+                            style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
 
-                  // FITUR BARU: Menampilkan Daftar Hobi / Chips
                   Wrap(
                     spacing: 6.0,
                     runSpacing: 4.0,
                     alignment: WrapAlignment.center,
-                    children: _hobbies.map((hobby) => Chip(
+                    children: _profile.skills.map((hobby) => Chip(
                       label: Text(hobby, style: const TextStyle(fontSize: 10)),
                       padding: EdgeInsets.zero,
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -361,7 +364,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Tombol Utama: Like & Subscribe
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -412,7 +414,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   Divider(height: 1, color: isDark ? Colors.grey[800] : Colors.grey[300]),
                   const SizedBox(height: 8),
 
-                  // Action Buttons (Simpan, Detail, Edit, Share)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -429,7 +430,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         tooltip: 'Detail Profil',
                       ),
                       IconButton(
-                        onPressed: _showEditDialog,
+                        onPressed: _openEditPage, // Tombol edit profil terhubung ke form validasi
                         icon: const Icon(Icons.edit_outlined),
                         color: isDark ? Colors.grey[400] : Colors.grey[700],
                         tooltip: 'Edit Profil',

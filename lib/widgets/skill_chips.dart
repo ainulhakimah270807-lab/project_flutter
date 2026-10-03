@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 class SkillChips extends StatelessWidget {
-  const SkillChips({super.key});
+  const SkillChips({super.key, required this.skills});
 
-  static const _skills = ['Flutter', 'Dart', 'Firebase', 'Git', 'REST API', 'Figma', 'SQLite'];
+  final List<String> skills;
 
   @override
   Widget build(BuildContext context) {
@@ -11,7 +11,7 @@ class SkillChips extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       alignment: WrapAlignment.center,
-      children: [for (final skill in _skills) Chip(label: Text(skill))],
+      children: [for (final skill in skills) Chip(label: Text(skill))],
     );
   }
-}
+}

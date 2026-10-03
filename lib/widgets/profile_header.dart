@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import '../models/profile_data.dart';
+import '../utils/avatar_helper.dart';
 
 class ProfileHeader extends StatelessWidget {
-  const ProfileHeader({super.key});
+  const ProfileHeader({super.key, required this.profile});
+
+  final ProfileData profile;
 
   @override
   Widget build(BuildContext context) {
@@ -11,7 +15,9 @@ class ProfileHeader extends StatelessWidget {
 
         final avatar = CircleAvatar(
           radius: isWide ? 56 : 48,
-          backgroundImage: const NetworkImage('https://picsum.photos/seed/profile/300/300'),
+          backgroundColor: Colors.blue.shade100,
+          backgroundImage: getAvatarImageProvider(profile.avatarUrl),
+          onBackgroundImageError: (exception, stackTrace) {},
         );
 
         if (isWide) {
@@ -19,7 +25,7 @@ class ProfileHeader extends StatelessWidget {
             children: [
               avatar,
               const SizedBox(width: 20),
-              const Expanded(child: _ProfileInfo(centered: false)),
+              Expanded(child: _ProfileInfo(profile: profile, centered: false)),
             ],
           );
         }
@@ -28,7 +34,7 @@ class ProfileHeader extends StatelessWidget {
           children: [
             avatar,
             const SizedBox(height: 12),
-            const _ProfileInfo(centered: true),
+            _ProfileInfo(profile: profile, centered: true),
           ],
         );
       },
@@ -37,8 +43,9 @@ class ProfileHeader extends StatelessWidget {
 }
 
 class _ProfileInfo extends StatelessWidget {
-  const _ProfileInfo({required this.centered});
+  const _ProfileInfo({required this.profile, required this.centered});
 
+  final ProfileData profile;
   final bool centered;
 
   @override
@@ -48,16 +55,16 @@ class _ProfileInfo extends StatelessWidget {
     return Column(
       crossAxisAlignment: centered ? CrossAxisAlignment.center : CrossAxisAlignment.start,
       children: [
-        Text('Fakhry', style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+        Text(profile.name, style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 4),
-        Text('Mobile Developer • Software Engineer', style: textTheme.bodyMedium),
+        Text('${profile.prodi} • ${profile.universitas}', style: textTheme.bodyMedium),
         const SizedBox(height: 8),
         Text(
-          'Suka membangun aplikasi Flutter dan belajar hal baru setiap hari.',
+          profile.bio,
           textAlign: centered ? TextAlign.center : TextAlign.start,
           style: textTheme.bodySmall,
         ),
       ],
     );
   }
-}
+}
